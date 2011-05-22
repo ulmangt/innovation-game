@@ -15,7 +15,7 @@
     x#))
 
 ; a struct representing a card
-(defstruct card :id :name :age :color :symbols :dogma)
+(defstruct card :name :age :color :symbols :dogma)
 
 ; a struct representing a stack of cards
 ; (which must all be of the same color
@@ -27,10 +27,17 @@
 (defstruct player :id :name :stacks :hand :score :achievements :foreshadow)
 
 ; a struct representing the entire state of a game
-; players is a vector of the players in turn order
-; achievements is a seq of available achievements
-; piles a map from integer (card :age) to card
-(defstruct game :id :players :achievements :piles)
+; players - a vector of the players in turn order
+; achievements - a seq of available achievements
+; piles - a map from integer (card :age) to card
+; turn - the id of the player whose turn it is
+; actions - the number of actions the current player has
+; state - custom information about the current state of the game
+;         the information contained here may be different depending
+;         on what the game is currently waiting on (it is used to
+;         keep track of the sequence of events that happen during
+;         dogma execution)
+(defstruct game :id :players :turn :actions :state :achievements :piles)
 
 ; create an empty stack
 (defn new-stack [color]
