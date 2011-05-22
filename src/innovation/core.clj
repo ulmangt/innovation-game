@@ -15,7 +15,20 @@
     x#))
 
 ; a struct representing a card
-(defstruct card :name :age :color :symbols :dogma)
+; name - a string containing the name of the card
+; age - a number 1-10 representing the age of the card
+; color - the color of the card
+; symbols - a length 4 vector containing the symbols on the card
+; dogmas - a vector containing the dogma effects of the card in the order they occur
+(defstruct card :name :age :color :symbols :dogmas)
+
+; a struct representing a dogma ability on a card
+; symbol - the symbol that the effect keys off of
+; text - the text of the dogma effect
+; fn - a handler function which takes arguments [game player]
+;      game - the current state of the game
+;      player - the player performing the dogma action
+(defstruct dogma :symbol :text :fn)
 
 ; a struct representing a stack of cards
 ; (which must all be of the same color
@@ -70,6 +83,50 @@
     (if empty? cards)
       stack
       (assoc stack :cards (subvec cards 1 (count cards)))))
+
+; peek top card
+(defn peek-top-card [stack]
+  (let [{cards :cards} stack]
+    (if empty? cards)
+      nil
+      (nth 0 cards)))
+
+; get a player
+(defn get-player [game player-id]
+  (let [{players :players} game]
+    (nth player-id players)))
+
+; add a card to player's hand
+(defn add-card-hand [player card]
+  (let [{hand :hand} player]
+    (assoc player :hand (cons card hand))))
+
+; generates a predicate which checks for a given card
+(defn is-card? [card]
+  (fn [x] (= (:name card) (:name x))))
+
+; remove a card from player's hand
+(defn remove-card-hand [player card]
+  (let [{hand :hand} player]
+    (assoc player :hand (remove (is-card? card) hand))))
+
+; draw a card
+(defn draw-card [game player age]
+  (let [{piles :piles} game]
+    (loop [current-age age]
+      (if (= current-age 11)
+        nil
+        (let [pile (piles current-age)
+              card (peek-top-card pile)]
+          (if (not (nil? card))
+            (let [player (add-card-hand player card)
+                  pile (remove-top-card pile)]
+              (assoc-in
+                (assoc-in
+                  game
+                  [:players (:id player)] player)
+                [:piles current-age] pile)
+            (recur (+ current-age 1)))))))))
 
 ; gets the symbols visible on the card for a given splay
 ; assumes the card is not the top card unless the splay is :none
