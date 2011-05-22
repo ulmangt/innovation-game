@@ -39,22 +39,22 @@
 (def purple-stack-1
   (struct-map stack :color :purple
                     :splay :none
-                    :cards (list astronomy city_states)))
+                    :cards [astronomy city_states]))
 
 (def purple-stack-2
   (struct-map stack :color :purple
                     :splay :none
-                    :cards (list city_states astronomy)))
+                    :cards [city_states astronomy]))
 
 (def purple-stack-3
   (struct-map stack :color :purple
                     :splay :none
-                    :cards (list city_states)))
+                    :cards [city_states]))
 
 (def purple-stack-4
   (struct-map stack :color :purple
                     :splay :none
-                    :cards (list)))
+                    :cards []))
 
 ; splay a stack
 (defn splay-stack [stack splay]
@@ -63,13 +63,26 @@
 ; tuck a card
 (defn tuck-card [stack card]
   (let [{cards :cards} stack]
-    (concat cards (list card))))
+    (assoc stack :cards (vec (concat cards (list card))))))
 
 ; meld a card
 (defn meld-card [stack card]
   (let [{cards :cards} stack]
-    (cons card cards)))
-    
+    (assoc stack :cards (vec (cons card cards)))))
+
+; remove bottom card
+(defn remove-bottom-card [stack]
+  (let [{cards :cards} stack]
+    (if (empty? cards)
+      stack
+      (assoc stack :cards (pop cards)))))
+
+; remove top card
+(defn remove-top-card [stack]
+  (let [{cards :cards} stack]
+    (if empty? cards)
+      stack
+      (assoc stack :cards (subvec cards 1 (count cards)))))
 
 ; gets the symbols visible on the card for a given splay
 ; assumes the card is not the top card unless the splay is :none
