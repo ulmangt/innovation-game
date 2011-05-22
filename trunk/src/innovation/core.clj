@@ -1,4 +1,5 @@
 (ns innovation.core
+  (:import (java.util UUID))
   (:use clojure.contrib.import-static
         clojure.set
         [clojure.contrib.seq-utils :only (includes?)]))
@@ -14,22 +15,64 @@
     x#))
 
 ; a struct representing a card
-(defstruct card :name :age :color :symbols :dogma)
+(defstruct card :id :name :age :color :symbols :dogma)
 
 ; a struct representing a stack of cards
 ; (which must all be of the same color
 (defstruct stack :color :splay :cards)
 
+; a struct representing a player
+; hand, score, achieve, and foreshadow are vectors
+; of cards with low indices on top
+(defstruct player :id :name :stacks :hand :score :achievements :foreshadow)
+
+; a struct representing the entire state of a game
+; players is a vector of the players in turn order
+; achievements is a seq of available achievements
+; piles a map from integer (card :age) to card
+(defstruct game :id :players :achievements :piles)
+
+; create an empty stack
+(defn new-stack [color]
+  (struct-map stack :color color :splay :node :cards []))
+
+; create a test game
+(def test-game
+  (struct-map game
+    :id (UUID/randomUUID)
+    :players []
+    :achievements []
+    :piles {1 [] 2 [] 3 [] 4 [] 5 [] 6 [] 7 [] 8 [] 9 [] 10 []}))
+
+;create a test player
+(def test-player-1
+  (struct-map player
+    :id (UUID/randomUUID)
+    :name "Beep Beep"
+    :hand []
+    :score []
+    :foreshadow []
+    :achievements []
+    :stacks {:red (new-stack :red)
+             :blue (new-stack :blue)
+             :green (new-stack :green)
+             :yellow (new-stack :yellow)
+             :purple (new-stack :purple)}))
+
+
+
 ; create a test card
 (def astronomy 
-  (struct-map card :name "Astronomy"
+  (struct-map card :id 1
+                   :name "Astronomy"
                    :age 5
                    :color :purple
                    :symbols [:crown :bulb :bulb :hex]
                    :dogma (fn [_] _)))
 
-(def city_states
-  (struct-map card :name "City States"
+(def city-states
+  (struct-map card :id 2
+                   :name "City States"
                    :age 1
                    :color :purple
                    :symbols [:hex :crown :crown :castle]
@@ -39,22 +82,19 @@
 (def purple-stack-1
   (struct-map stack :color :purple
                     :splay :none
-                    :cards [astronomy city_states]))
+                    :cards [astronomy city-states]))
 
 (def purple-stack-2
   (struct-map stack :color :purple
                     :splay :none
-                    :cards [city_states astronomy]))
+                    :cards [city-states astronomy]))
 
 (def purple-stack-3
   (struct-map stack :color :purple
                     :splay :none
-                    :cards [city_states]))
+                    :cards [city-states]))
 
-(def purple-stack-4
-  (struct-map stack :color :purple
-                    :splay :none
-                    :cards []))
+(def purple-stack-4 (new-stack :purple))
 
 ; splay a stack
 (defn splay-stack [stack splay]
