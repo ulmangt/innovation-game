@@ -13,7 +13,11 @@
                    :age 1
                    :color :green
                    :symbols [:hex :castle :castle :castle]
-                   :dogma (fn [_] _)))
+                   :dogma (vector
+                            (struct-map dogma
+                              :symbol :castle
+                              :fn (fn [game player]
+                                    )))))
 
 (def mysticism
   (struct-map card :name "Mysticism"
