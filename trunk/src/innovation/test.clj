@@ -1,28 +1,9 @@
 (ns innovation.test
+  (:import (java.util UUID))
   (:use (innovation core cards)))
 
 ; create a test game
-(def test-game
-  (struct-map game
-    :id (UUID/randomUUID)
-    :players []
-    :achievements []
-    :piles {1 [] 2 [] 3 [] 4 [] 5 [] 6 [] 7 [] 8 [] 9 [] 10 []}))
-
-;create a test player
-(def test-player-1
-  (struct-map player
-    :id (UUID/randomUUID)
-    :name "Beep Beep"
-    :hand []
-    :score []
-    :foreshadow []
-    :achievements []
-    :stacks {:red (new-stack :red)
-             :blue (new-stack :blue)
-             :green (new-stack :green)
-             :yellow (new-stack :yellow)
-             :purple (new-stack :purple)}))
+(def test-game (new-game [(new-player 0 "Player0") (new-player 1 "Player1")]))
 
 ; create a test stack
 (def purple-stack-1
