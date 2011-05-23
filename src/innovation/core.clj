@@ -122,6 +122,14 @@
   (let [{hand :hand} player]
     (assoc player :hand (remove (is-card? card) hand))))
 
+; tests whether the given player has the given card
+(defn has-card? [player card]
+  (contains? (:hand player) card))
+
+;;;; game actions
+; all functions take a game state object and return an updated game state object
+
+
 ; draw a card
 (defn draw-card [game player-id age]
   (let [{piles :piles} game
@@ -140,23 +148,27 @@
             (recur (+ current-age 1))))))))
 
 ; return a card
-(defn return-card [game player-id card]
+(defn return-card [game player-id card-name]
   (let [{piles :piles} game
         player (get-player game player-id)
+        card (get-card card-name)
         age (:age card)
         pile (piles age)]
     (assoc-in
       (assoc-in game [:players player-id] (remove-card-hand player card))
-      [:piles age] (tuck-card pile card))))
+      [:piles age] (tuck-card-stack pile card))))
 
 ; meld a card
-(defn meld-card [game player-id card]
+(defn meld-card [game player-id card-name]
   (let [player (get-player game player-id)
+        card (get-card card-name)
         color (:color card)
         stack (color (:stacks player))]
     (assoc-in
       (assoc-in game [:players player-id] (remove-card-hand player card))
       [:players player-id :stacks color] (meld-card-stack stack card))))
+
+; tuck a card
 
 ; gets the symbols visible on the card for a given splay
 ; assumes the card is not the top card unless the splay is :none
