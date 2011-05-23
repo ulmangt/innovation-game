@@ -73,12 +73,12 @@
   (assoc stack :splay splay))
 
 ; tuck a card
-(defn tuck-card [stack card]
+(defn tuck-card-stack [stack card]
   (let [{cards :cards} stack]
     (assoc stack :cards (vec (concat cards (list card))))))
 
 ; meld a card
-(defn meld-card [stack card]
+(defn meld-card-stack [stack card]
   (let [{cards :cards} stack]
     (assoc stack :cards (vec (cons card cards)))))
 
@@ -123,29 +123,40 @@
     (assoc player :hand (remove (is-card? card) hand))))
 
 ; draw a card
-(defn draw-card [game player age]
-  (let [{piles :piles} game]
+(defn draw-card [game player-id age]
+  (let [{piles :piles} game
+        player (get-player game player-id)]
     (loop [current-age age]
       (if (= current-age 11)
         nil
-        (let [pile (dbg (piles current-age))
-              card (dbg (peek-top-card pile))]
+        (let [pile (piles current-age)
+              card (peek-top-card pile)]
           (if (not (nil? card))
             (let [player (add-card-hand player card)
                   pile (remove-top-card pile)]
               (assoc-in
-                (assoc-in game [:players (:id player)] player)
+                (assoc-in game [:players player-id] player)
                 [:piles current-age] pile))
             (recur (+ current-age 1))))))))
 
 ; return a card
-(defn return-card [game player card]
+(defn return-card [game player-id card]
   (let [{piles :piles} game
+        player (get-player game player-id)
         age (:age card)
         pile (piles age)]
     (assoc-in
-      (assoc-in game [:players (:id player)] (remove-card-hand player card))
+      (assoc-in game [:players player-id] (remove-card-hand player card))
       [:piles age] (tuck-card pile card))))
+
+; meld a card
+(defn meld-card [game player-id card]
+  (let [player (get-player game player-id)
+        color (:color card)
+        stack (color (:stacks player))]
+    (assoc-in
+      (assoc-in game [:players player-id] (remove-card-hand player card))
+      [:players player-id :stacks color] (meld-card-stack stack card))))
 
 ; gets the symbols visible on the card for a given splay
 ; assumes the card is not the top card unless the splay is :none
