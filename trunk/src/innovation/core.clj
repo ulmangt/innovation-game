@@ -99,9 +99,9 @@
 ; peek top card
 (defn peek-top-card [stack]
   (let [{cards :cards} stack]
-    (if empty? cards)
-      nil
-      (nth cards 0)))
+    (if (empty? cards)
+        nil
+        (nth cards 0))))
 
 ; get a player by their id / seat-number
 (defn get-player [game player-id]
