@@ -134,11 +134,18 @@
             (let [player (add-card-hand player card)
                   pile (remove-top-card pile)]
               (assoc-in
-                (assoc-in
-                  game
-                  [:players (:id player)] player)
+                (assoc-in game [:players (:id player)] player)
                 [:piles current-age] pile))
             (recur (+ current-age 1))))))))
+
+; return a card
+(defn return-card [game player card]
+  (let [{piles :piles} game
+        age (:age card)
+        pile (piles age)]
+    (assoc-in
+      (assoc-in game [:players (:id player)] (remove-card-hand player card))
+      [:piles age] (tuck-card pile card))))
 
 ; gets the symbols visible on the card for a given splay
 ; assumes the card is not the top card unless the splay is :none
