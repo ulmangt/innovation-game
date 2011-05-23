@@ -1,34 +1,9 @@
 (ns innovation.core
   (:import (java.util UUID))
-  (:use clojure.contrib.import-static
+  (:use (innovation cards)
+        clojure.contrib.import-static
         clojure.set
         [clojure.contrib.seq-utils :only (includes?)]))
-
-(def symbols #{ :crown :leaf :factory :castle :clock :bulb :hex })
-(def colors #{ :red :green :blue :purple :yellow })
-(def splays #{ :top :none :left :right :up })
-
-;debugging parts of expressions
-(defmacro dbg [x]
-  `(let [x# ~x]
-    (println "dbg:" '~x "=" x#)
-    x#))
-
-; a struct representing a card
-; name - a string containing the name of the card
-; age - a number 1-10 representing the age of the card
-; color - the color of the card
-; symbols - a length 4 vector containing the symbols on the card
-; dogmas - a vector containing the dogma effects of the card in the order they occur
-(defstruct card :name :age :color :symbols :dogmas)
-
-; a struct representing a dogma ability on a card
-; symbol - the symbol that the effect keys off of
-; text - the text of the dogma effect
-; fn - a handler function which takes arguments [game player]
-;      game - the current state of the game
-;      player - the player performing the dogma action
-(defstruct dogma :symbol :text :fn)
 
 ; a struct representing a stack of cards
 ; (which must all be of the same color
@@ -43,18 +18,55 @@
 ; players - a vector of the players in turn order
 ; achievements - a seq of available achievements
 ; piles - a map from integer (card :age) to card
-; turn - the id of the player whose turn it is
+; turn-num - the game round number
+; player-num - the current player
 ; actions - the number of actions the current player has
 ; state - custom information about the current state of the game
 ;         the information contained here may be different depending
 ;         on what the game is currently waiting on (it is used to
 ;         keep track of the sequence of events that happen during
 ;         dogma execution)
-(defstruct game :id :players :turn :actions :state :achievements :piles)
+(defstruct game :id :players :turn-num :player-num :actions :state :achievements :piles)
 
 ; create an empty stack
 (defn new-stack [color]
-  (struct-map stack :color color :splay :node :cards []))
+  (struct-map stack :color color :splay :none :cards []))
+
+; create a map with stacks for each color
+; suitable for the :stacks key in the player struct
+(defn new-stacks []
+  {:red (new-stack :red)
+   :blue (new-stack :blue)
+   :green (new-stack :green)
+   :yellow (new-stack :yellow)
+   :purple (new-stack :purple)})
+
+; create a new player
+(defn new-player [id name]
+  (struct-map player
+    :id id
+    :name name
+    :stacks (new-stacks)
+    :hand '()
+    :score '()
+    :achievements '()
+    :foreshadow '() ))
+
+; creates a map suitable for the :piles key of the game struct
+(defn new-piles []
+  {1 {:cards (shuffle age-1-cards)} 2 {:cards []} 3 {:cards []} 4 {:cards []} 5 {:cards (shuffle age-5-cards)} 6 {:cards []} 7 {:cards []} 8 {:cards []} 9 {:cards []} 10 {:cards []}})
+
+; create a new game
+(defn new-game [players]
+  (struct-map game
+    :id (UUID/randomUUID)
+    :players (shuffle players)
+    :turn-num 1
+    :player-num 0
+    :actions 1
+    :state nil
+    :achievements '()
+    :piles (new-piles)))
 
 ; splay a stack
 (defn splay-stack [stack splay]
@@ -89,12 +101,12 @@
   (let [{cards :cards} stack]
     (if empty? cards)
       nil
-      (nth 0 cards)))
+      (nth cards 0)))
 
-; get a player
+; get a player by their id / seat-number
 (defn get-player [game player-id]
   (let [{players :players} game]
-    (nth player-id players)))
+    (nth players player-id)))
 
 ; add a card to player's hand
 (defn add-card-hand [player card]
@@ -116,8 +128,8 @@
     (loop [current-age age]
       (if (= current-age 11)
         nil
-        (let [pile (piles current-age)
-              card (peek-top-card pile)]
+        (let [pile (dbg (piles current-age))
+              card (dbg (peek-top-card pile))]
           (if (not (nil? card))
             (let [player (add-card-hand player card)
                   pile (remove-top-card pile)]
@@ -125,8 +137,8 @@
                 (assoc-in
                   game
                   [:players (:id player)] player)
-                [:piles current-age] pile)
-            (recur (+ current-age 1)))))))))
+                [:piles current-age] pile))
+            (recur (+ current-age 1))))))))
 
 ; gets the symbols visible on the card for a given splay
 ; assumes the card is not the top card unless the splay is :none
