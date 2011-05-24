@@ -154,12 +154,32 @@
         bottom-count (apply + (map #(count-symbols % splay symbol) bottom-cards))]
     (+ top-count bottom-count)))
 
+; returns the highest age card among a player's top cards
 (defn highest-top-card-age [player]
   (let [{stacks :stacks} player
         top-card-ages (filter number? (map #(:age (peek-top-card %)) (vals stacks)))]
     (if (empty? top-card-ages)
       0
       (apply max top-card-ages))))
+
+; returns the top cards which satisfy a given predicate
+(defn get-top-cards [player pred]
+  (let [{stacks :stacks} player
+        top-cards (vals stacks)]
+    (filter pred top-cards)))
+
+(defn get-top-cards-color [player color]
+  (get-top-cards player #(= color (:color %))))
+
+(defn get-top-cards-highest [player]
+  (let [highest-age (highest-top-card-age player)]
+    (get-top-cards player #(= highest-age (:age %)))))
+
+(defn get-top-cards-with-symbol [player symbol]
+  (get-top-cards player #(contains? (get-symbols :top))))
+
+(defn get-top-cards-without-symbol [player symbol]
+  (get-top-cards player #(not (contains? (get-symbols :top)))))
 
 ;;;;
 ;;;; game actions
