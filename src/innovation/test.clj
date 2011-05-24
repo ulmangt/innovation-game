@@ -23,3 +23,4 @@
 
 (def purple-stack-4 (new-stack :purple))
 
+(highest-top-card-age (get-player (meld-card (draw-card test-game 0 1) 0 "Mysticism") 0))
