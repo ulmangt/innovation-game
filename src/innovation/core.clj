@@ -1,72 +1,8 @@
 (ns innovation.core
-  (:import (java.util UUID))
-  (:use (innovation cards)
+  (:use (innovation definitions)
         clojure.contrib.import-static
         clojure.set
         [clojure.contrib.seq-utils :only (includes?)]))
-
-; a struct representing a stack of cards
-; (which must all be of the same color
-(defstruct stack :color :splay :cards)
-
-; a struct representing a player
-; hand, score, achieve, and foreshadow are vectors
-; of cards with low indices on top
-(defstruct player :id :name :stacks :hand :score :achievements :foreshadow)
-
-; a struct representing the entire state of a game
-; players - a vector of the players in turn order
-; achievements - a seq of available achievements
-; piles - a map from integer (card :age) to card
-; turn-num - the game round number
-; player-num - the current player
-; actions - the number of actions the current player has
-; state - custom information about the current state of the game
-;         the information contained here may be different depending
-;         on what the game is currently waiting on (it is used to
-;         keep track of the sequence of events that happen during
-;         dogma execution)
-(defstruct game :id :players :turn-num :player-num :actions :state :achievements :piles)
-
-; create an empty stack
-(defn new-stack [color]
-  (struct-map stack :color color :splay :none :cards []))
-
-; create a map with stacks for each color
-; suitable for the :stacks key in the player struct
-(defn new-stacks []
-  {:red (new-stack :red)
-   :blue (new-stack :blue)
-   :green (new-stack :green)
-   :yellow (new-stack :yellow)
-   :purple (new-stack :purple)})
-
-; create a new player
-(defn new-player [id name]
-  (struct-map player
-    :id id
-    :name name
-    :stacks (new-stacks)
-    :hand '()
-    :score '()
-    :achievements '()
-    :foreshadow '() ))
-
-; creates a map suitable for the :piles key of the game struct
-(defn new-piles []
-  {1 {:cards (shuffle age-1-cards)} 2 {:cards []} 3 {:cards []} 4 {:cards []} 5 {:cards (shuffle age-5-cards)} 6 {:cards []} 7 {:cards []} 8 {:cards []} 9 {:cards []} 10 {:cards []}})
-
-; create a new game
-(defn new-game [players]
-  (struct-map game
-    :id (UUID/randomUUID)
-    :players (shuffle players)
-    :turn-num 1
-    :player-num 0
-    :actions 1
-    :state nil
-    :achievements '()
-    :piles (new-piles)))
 
 ; splay a stack
 (defn splay-stack [stack splay]
@@ -126,6 +62,10 @@
 (defn has-card? [player card]
   (contains? (:hand player) card))
 
+; searches the players hand for the named card
+(defn get-card-hand [player card-name]
+  (let [{hand :hand} player]
+    (first (filter #(= card-name (:name %)) hand))))
 
 ; gets the symbols visible on the card for a given splay
 ; assumes the card is not the top card unless the splay is :none
@@ -187,18 +127,6 @@
 ;;;; all functions take a game state object and return an updated game state object
 ;;;;
 
-;(repeat draw-card 3 [game player-id age])
-; calls draw card with given arguments 3 times
-; feeding the result back into the first argument
-; of the next call to draw card
-(defmacro repeat-action [action-fn times [& args]]
-  `(let [other-args# '~(rest args)
-         game# ~(first args)]
-     (loop [g# game# t# ~times]
-       (if (= 0 t#)
-         g#
-         (recur (apply ~action-fn g# other-args#) (- t# 1))))))
-  
 ; draw a card from a specific age
 (defn draw-card [game player-id age]
   (let [{piles :piles} game
@@ -224,7 +152,7 @@
 (defn return-card [game player-id card-name]
   (let [{piles :piles} game
         player (get-player game player-id)
-        card (get-card card-name)
+        card (get-card-hand player card-name)
         age (:age card)
         pile (piles age)]
     (assoc-in
@@ -234,7 +162,7 @@
 ; meld a card
 (defn meld-card [game player-id card-name]
   (let [player (get-player game player-id)
-        card (get-card card-name)
+        card (get-card-hand player card-name)
         color (:color card)
         stack (color (:stacks player))]
     (assoc-in
@@ -244,7 +172,7 @@
 ; tuck a card
 (defn tuck-card [game player-id card-name]
   (let [player (get-player game player-id)
-        card (get-card card-name)
+        card (get-card-hand player card-name)
         color (:color card)
         stack (color (:stacks player))]
     (assoc-in
