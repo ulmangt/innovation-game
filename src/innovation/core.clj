@@ -187,7 +187,19 @@
 ;;;; all functions take a game state object and return an updated game state object
 ;;;;
 
-; draw a card
+;(repeat draw-card 3 [game player-id age])
+; calls draw card with given arguments 3 times
+; feeding the result back into the first argument
+; of the next call to draw card
+(defmacro repeat-action [action-fn times [& args]]
+  `(let [other-args# '~(rest args)
+         game# ~(first args)]
+     (loop [g# game# t# ~times]
+       (if (= 0 t#)
+         g#
+         (recur (apply ~action-fn g# other-args#) (- t# 1))))))
+  
+; draw a card from a specific age
 (defn draw-card [game player-id age]
   (let [{piles :piles} game
         player (get-player game player-id)]
@@ -203,6 +215,10 @@
                 (assoc-in game [:players player-id] player)
                 [:piles current-age] pile))
             (recur (+ current-age 1))))))))
+
+; draw action
+(defn draw-card-action [game player-id]
+  (draw-card game player-id (highest-top-card-age (get-player game player-id))))
 
 ; return a card
 (defn return-card [game player-id card-name]
