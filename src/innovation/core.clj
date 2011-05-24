@@ -165,8 +165,9 @@
 ; returns the top cards which satisfy a given predicate
 (defn get-top-cards [player pred]
   (let [{stacks :stacks} player
-        top-cards (vals stacks)]
-    (filter pred top-cards)))
+        top-cards (map #(peek-top-card %) (vals stacks))
+        top-cards-non-nil (remove nil? top-cards)]
+    (filter pred top-cards-non-nil)))
 
 (defn get-top-cards-color [player color]
   (get-top-cards player #(= color (:color %))))
@@ -176,10 +177,10 @@
     (get-top-cards player #(= highest-age (:age %)))))
 
 (defn get-top-cards-with-symbol [player symbol]
-  (get-top-cards player #(contains? (get-symbols :top))))
+  (get-top-cards player #(some #{symbol} (get-symbols % :top))))
 
 (defn get-top-cards-without-symbol [player symbol]
-  (get-top-cards player #(not (contains? (get-symbols :top)))))
+  (get-top-cards player #(not (some #{symbol} (get-symbols % :top)))))
 
 ;;;;
 ;;;; game actions
