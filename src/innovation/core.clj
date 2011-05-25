@@ -23,14 +23,30 @@
   (let [{cards :cards} stack]
     (if (empty? cards)
       stack
-      (assoc stack :cards (pop cards)))))
+      (let [new-stack (assoc stack :cards (pop cards))
+						new-size (count (:cards new-stack))]
+				(if (<= new-size 1)
+					(assoc new-stack :splay :none)
+					new-stack)))))
 
 ; remove top card
 (defn remove-top-card [stack]
   (let [{cards :cards} stack]
-    (if empty? cards)
+    (if (empty? cards)
       stack
-      (assoc stack :cards (subvec cards 1 (count cards)))))
+      (let [new-stack (assoc stack :cards (subvec cards 1 (count cards)))
+						new-size (count (:cards new-stack))]
+				(if (<= new-size 1)
+					(assoc new-stack :splay :none)
+					new-stack)))))
+
+; remove a given card from a stack
+(defn remove-card [stack card-name]
+	(let [new-stack (dbg (assoc stack :cards (vec (remove #(= card-name (:name %)) (:cards stack)))))
+				new-size (dbg (count (:cards new-stack)))]
+		(if (<= new-size 1)
+			(assoc new-stack :splay :none)
+			new-stack)))
 
 ; peek top card
 (defn peek-top-card [stack]
@@ -66,6 +82,13 @@
 (defn get-card-hand [player card-name]
   (let [{hand :hand} player]
     (first (filter #(= card-name (:name %)) hand))))
+
+; searches the stack for the named card
+(defn get-card-stack [player card-name stack-color]
+	(let [{hand :hand stacks :stacks} player
+			  stack (stack-color stacks)
+				cards (:cards stack)]
+		(first (filter #(= card-name (:name %)) cards))))
 
 ; gets the symbols visible on the card for a given splay
 ; assumes the card is not the top card unless the splay is :none
@@ -148,8 +171,8 @@
 (defn draw-card-action [game player-id]
   (draw-card game player-id (highest-top-card-age (get-player game player-id))))
 
-; return a card
-(defn return-card [game player-id card-name]
+; return a card from the player's hand
+(defn return-card-hand [game player-id card-name]
   (let [{piles :piles} game
         player (get-player game player-id)
         card (get-card-hand player card-name)
@@ -158,6 +181,23 @@
     (assoc-in
       (assoc-in game [:players player-id] (remove-card-hand player card))
       [:piles age] (tuck-card-stack pile card))))
+
+; return a card from a stack
+(defn return-card-stack [game player-id card-name stack-color]
+	  (let [{piles :piles} game
+           player (get-player game player-id)
+				   stack (stack-color (:stacks player))
+           card (get-card-stack player card-name stack-color)
+           age (:age card)
+           pile (piles age)
+					 game-1 (assoc-in
+										game
+										[:players player-id :stacks stack-color]
+										(remove-card stack card-name))]
+			(assoc-in
+				game-1
+				[:piles age]
+				(tuck-card-stack pile card))))
 
 ; meld a card
 (defn meld-card [game player-id card-name]
@@ -178,3 +218,11 @@
     (assoc-in
       (assoc-in game [:players player-id] (remove-card-hand player card))
       [:players player-id :stacks color] (tuck-card-stack stack card))))
+
+(defn splay-stack [game player-id stack-color splay]
+	(let [player (get-player game player-id)
+				stack (stack-color (:stacks player))
+				stack-size (count (:cards stack))
+				actual-splay (if (<= stack-size 1) :none splay)]
+		(assoc-in game [:players player-id :stacks stack-color :splay] actual-splay)))
+			
