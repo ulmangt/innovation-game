@@ -1,0 +1,5 @@
+LOGIN,<username>,<password>
+Login to the server with the given username and password, allowing access to other commands
+
+ECHO,<text>
+Test command. Simply echos the provided text

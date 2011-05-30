@@ -1,5 +1,9 @@
 (ns innovation.definitions)
 
+
+(defstruct lobby :players)
+
+
 (def symbols #{ :crown :leaf :factory :castle :clock :bulb :hex })
 (def colors #{ :red :green :blue :purple :yellow })
 (def splays #{ :top :none :left :right :up })
@@ -30,7 +34,8 @@
 ; a struct representing a player
 ; hand, score, achieve, and foreshadow are vectors
 ; of cards with low indices on top
-(defstruct player :id :name :stacks :hand :score :achievements :foreshadow)
+; in, out are streams
+(defstruct player :id :name :password :in :out :stacks :hand :score :achievements :foreshadow)
 
 ; a struct representing the entire state of a game
 ; players - a vector of the players in turn order
