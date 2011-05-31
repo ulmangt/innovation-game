@@ -35,7 +35,7 @@
 ; hand, score, achieve, and foreshadow are vectors
 ; of cards with low indices on top
 ; in, out are streams
-(defstruct player :id :name :password :in :out :stacks :hand :score :achievements :foreshadow)
+(defstruct player :name :password :in :out :stacks :hand :score :achievements :foreshadow)
 
 ; a struct representing the entire state of a game
 ; players - a vector of the players in turn order
