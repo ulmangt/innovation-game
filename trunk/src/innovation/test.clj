@@ -3,7 +3,7 @@
   (:use (innovation core cards definitions initialize)))
 
 ; create a test game
-(def test-game (new-game [(new-player 0 "Player0") (new-player 1 "Player1")]))
+(def test-game (new-game [(reset-player {:id 0 :name "Player0"}) (reset-player {:id 1 :name "Player1"})]))
 
 ; create a test stack
 (def purple-stack-1

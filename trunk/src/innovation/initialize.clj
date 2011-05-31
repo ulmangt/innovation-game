@@ -17,10 +17,15 @@
    :purple (new-stack :purple)})
 
 ; create a new player
-(defn new-player [id name]
+(defn new-player [name password in out]
   (struct-map player
-    :id id
     :name name
+    :password password
+    :in in
+    :out out))
+
+(defn reset-player [player]
+  (assoc player 
     :stacks (new-stacks)
     :hand '()
     :score '()
